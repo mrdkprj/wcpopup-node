@@ -138,17 +138,23 @@ fn build_menu(builder: &mut MenuBuilder, items: &Vec<ElectronMenuItem>) {
         };
         match item.itype.as_str() {
             "normal" => {
-                if item.accelerator.is_empty() {
+                if item.accelerator.is_empty() && item.icon.is_empty() {
                     builder.text(&item.id, &item.label, disabled);
-                } else {
+                } else if item.icon.is_empty() {
                     builder.text_with_accelerator(&item.id, &item.label, disabled, &item.accelerator);
+                } else {
+                    builder.text_with_icon(&item.id, &item.label, disabled, Some(&item.accelerator), std::path::PathBuf::from(&item.icon));
                 }
             }
             "separator" => {
                 builder.separator();
             }
             "submenu" => {
-                let mut parent = builder.submenu(&item.id, &item.label, disabled);
+                let mut parent = if item.icon.is_empty() {
+                    builder.submenu(&item.id, &item.label, disabled)
+                } else {
+                    builder.submenu_with_icon(&item.id, &item.label, disabled, std::path::PathBuf::from(&item.icon))
+                };
                 build_menu(&mut parent, &item.submenu);
                 let submenu = parent.build().unwrap();
                 let mut map = MENU_MAP.try_lock().unwrap();

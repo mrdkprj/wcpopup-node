@@ -19,6 +19,7 @@ pub struct ElectronMenuItem {
     pub submenu: Vec<ElectronMenuItem>,
     pub id: String,
     pub name: String,
+    pub icon: String,
 }
 
 impl ElectronMenuItem {
@@ -44,6 +45,7 @@ impl ElectronMenuItem {
                 .collect(),
             id: to_string(cx, &value, "id"),
             name: to_string(cx, &value, "name"),
+            icon: to_string(cx, &value, "icon"),
         }
     }
 }
@@ -75,6 +77,12 @@ pub fn to_menu_item(cx: &mut FunctionContext, value: Handle<JsObject>) -> MenuIt
     let name = to_string(cx, &value, "name");
     let enabled = to_bool(cx, &value, "enabled", true);
     let checked = to_bool(cx, &value, "checked", false);
+    let icon_path = to_string(cx, &value, "icon");
+    let icon = if icon_path.is_empty() {
+        None
+    } else {
+        Some(std::path::PathBuf::from(icon_path))
+    };
 
     let accelerator = if accelerator_str.is_empty() {
         None
@@ -99,9 +107,9 @@ pub fn to_menu_item(cx: &mut FunctionContext, value: Handle<JsObject>) -> MenuIt
     };
 
     let mut item = match menu_item_type {
-        MenuItemType::Text => MenuItem::new_text_item(&id, &label, accelerator, disabled),
+        MenuItemType::Text => MenuItem::new_text_item(&id, &label, accelerator, disabled, icon),
         MenuItemType::Separator => MenuItem::new_separator(),
-        MenuItemType::Submenu => MenuItem::new_text_item(&id, &label, accelerator, disabled),
+        MenuItemType::Submenu => MenuItem::new_text_item(&id, &label, accelerator, disabled, icon),
         MenuItemType::Checkbox => MenuItem::new_check_item(&id, &label, accelerator, checked, disabled),
         MenuItemType::Radio => MenuItem::new_radio_item(&id, &label, &name, accelerator, checked, disabled),
     };
@@ -150,6 +158,9 @@ pub fn from_menu_item<'a, C: Context<'a>>(cx: &mut C, item: &MenuItem) -> JsResu
 
     let uuid = cx.number(item.uuid);
     obj.set(cx, "uuid", uuid)?;
+
+    let icon = cx.string(item.icon.clone().unwrap_or_default().to_string_lossy());
+    obj.set(cx, "icon", icon)?;
 
     let menu_item_type_str = match item.menu_item_type {
         MenuItemType::Text => "normal",
