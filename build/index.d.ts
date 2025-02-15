@@ -11,7 +11,6 @@ declare namespace PopupMenu {
         checked: boolean;
         submenu: Menu;
         name: string;
-        icon: string;
         readonly uuid:number;
     };
 

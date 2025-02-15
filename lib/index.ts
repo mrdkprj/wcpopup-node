@@ -25,7 +25,6 @@ export type MenuItem = {
     submenu?: Menu;
     name?: string;
     click?: Function;
-    icon?: string;
 };
 
 export type Theme = "dark" | "light" | "system";

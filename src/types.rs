@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use neon::{
     handle::Handle,
     prelude::*,
@@ -5,8 +7,8 @@ use neon::{
     types::{JsArray, JsBoolean, JsNumber, JsObject, JsString},
 };
 use wcpopup::{
-    config::{ColorScheme, Config, Corner, FontWeight, MenuFont, MenuSize, Theme, ThemeColor},
-    Menu, MenuItem, MenuItemType, MenuType,
+    config::{ColorScheme, Config, Corner, FontWeight, IconSettings, MenuFont, MenuSVG, MenuSize, Theme, ThemeColor},
+    Menu, MenuIcon, MenuItem, MenuItemType, MenuType,
 };
 
 #[derive(Debug, Clone)]
@@ -81,7 +83,7 @@ pub fn to_menu_item(cx: &mut FunctionContext, value: Handle<JsObject>) -> MenuIt
     let icon = if icon_path.is_empty() {
         None
     } else {
-        Some(std::path::PathBuf::from(icon_path))
+        Some(MenuIcon::new(icon_path))
     };
 
     let accelerator = if accelerator_str.is_empty() {
@@ -89,11 +91,7 @@ pub fn to_menu_item(cx: &mut FunctionContext, value: Handle<JsObject>) -> MenuIt
     } else {
         Some(accelerator_str.as_str())
     };
-    let disabled = if enabled {
-        None
-    } else {
-        Some(true)
-    };
+    let disabled = !enabled;
 
     let item_type_str = to_string(cx, &value, "type");
 
@@ -110,8 +108,8 @@ pub fn to_menu_item(cx: &mut FunctionContext, value: Handle<JsObject>) -> MenuIt
         MenuItemType::Text => MenuItem::new_text_item(&id, &label, accelerator, disabled, icon),
         MenuItemType::Separator => MenuItem::new_separator(),
         MenuItemType::Submenu => MenuItem::new_text_item(&id, &label, accelerator, disabled, icon),
-        MenuItemType::Checkbox => MenuItem::new_check_item(&id, &label, accelerator, checked, disabled),
-        MenuItemType::Radio => MenuItem::new_radio_item(&id, &label, &name, accelerator, checked, disabled),
+        MenuItemType::Checkbox => MenuItem::new_check_item(&id, &label, accelerator, checked, disabled, icon),
+        MenuItemType::Radio => MenuItem::new_radio_item(&id, &label, &name, accelerator, checked, disabled, icon),
     };
 
     item.uuid = to_i32(cx, &value, "uuid") as u16;
@@ -158,9 +156,6 @@ pub fn from_menu_item<'a, C: Context<'a>>(cx: &mut C, item: &MenuItem) -> JsResu
 
     let uuid = cx.number(item.uuid);
     obj.set(cx, "uuid", uuid)?;
-
-    let icon = cx.string(item.icon.clone().unwrap_or_default().to_string_lossy());
-    obj.set(cx, "icon", icon)?;
 
     let menu_item_type_str = match item.menu_item_type {
         MenuItemType::Text => "normal",
@@ -218,6 +213,7 @@ pub fn to_config(cx: &mut FunctionContext, value: Handle<JsObject>) -> Config {
         item_vertical_padding: to_i32(cx, &size_obj, "itemVerticalPadding"),
         item_horizontal_padding: to_i32(cx, &size_obj, "itemHorizontalPadding"),
         submenu_offset: to_i32(cx, &size_obj, "submenuOffset"),
+        separator_size: to_i32(cx, &size_obj, "separatorSize"),
     };
 
     let font_obj = value.get::<JsObject, _, _>(cx, "font").unwrap();
@@ -278,12 +274,39 @@ pub fn to_config(cx: &mut FunctionContext, value: Handle<JsObject>) -> Config {
         Corner::DoNotRound
     };
 
+    let icon_obj = value.get_opt::<JsObject, _, _>(cx, "icon").unwrap();
+    let icon = if let Some(icon_obj) = icon_obj {
+        let check_svg_obj = icon_obj.get_opt::<JsObject, _, _>(cx, "checkSVG").unwrap();
+        let check_svg = check_svg_obj.map(|chekc_svg| MenuSVG {
+            path: PathBuf::from(to_string(cx, &chekc_svg, "path")),
+            width: to_i32(cx, &chekc_svg, "width"),
+            height: to_i32(cx, &chekc_svg, "height"),
+        });
+
+        let arrow_svg_obj = icon_obj.get_opt::<JsObject, _, _>(cx, "arrowSVG").unwrap();
+        let arrow_svg = arrow_svg_obj.map(|arrow_svg| MenuSVG {
+            path: PathBuf::from(to_string(cx, &arrow_svg, "path")),
+            width: to_i32(cx, &arrow_svg, "width"),
+            height: to_i32(cx, &arrow_svg, "height"),
+        });
+
+        Some(IconSettings {
+            check_svg,
+            arrow_svg,
+            reserve_icon_size: to_bool(cx, &icon_obj, "reserveIconSize", false),
+            horizontal_margin: Some(to_i32(cx, &icon_obj, "horizontalMargin")),
+        })
+    } else {
+        None
+    };
+
     Config {
         theme,
         size,
         color,
         corner,
         font,
+        icon,
     }
 }
 
@@ -385,6 +408,37 @@ pub fn from_config<'a, C: Context<'a>>(cx: &mut C, config: &Config) -> JsResult<
     font.set(cx, "lightFontWeight", a)?;
 
     configjs.set(cx, "font", font)?;
+
+    let icon_obj = cx.empty_object();
+    if let Some(icon) = &config.icon {
+        let check_svg_obj = cx.empty_object();
+        if let Some(check_svg) = &icon.check_svg {
+            let a = cx.string(check_svg.path.to_string_lossy());
+            check_svg_obj.set(cx, "path", a)?;
+            let a = cx.number(check_svg.width);
+            check_svg_obj.set(cx, "width", a)?;
+            let a = cx.number(check_svg.height);
+            check_svg_obj.set(cx, "height", a)?;
+        }
+        icon_obj.set(cx, "checkSVG", check_svg_obj)?;
+
+        let arrow_svg_obj = cx.empty_object();
+        if let Some(arrow_svg) = &icon.arrow_svg {
+            let a = cx.string(arrow_svg.path.to_string_lossy());
+            arrow_svg_obj.set(cx, "path", a)?;
+            let a = cx.number(arrow_svg.width);
+            arrow_svg_obj.set(cx, "width", a)?;
+            let a = cx.number(arrow_svg.height);
+            arrow_svg_obj.set(cx, "height", a)?;
+        }
+        icon_obj.set(cx, "checkSVG", arrow_svg_obj)?;
+        let a = cx.boolean(icon.reserve_icon_size);
+        icon_obj.set(cx, "reserveIconSize", a)?;
+        let a = cx.number(icon.horizontal_margin.unwrap_or(0));
+        icon_obj.set(cx, "horizontalMargin", a)?;
+    }
+
+    configjs.set(cx, "icon", icon_obj)?;
 
     Ok(configjs)
 }

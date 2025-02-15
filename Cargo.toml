@@ -1,6 +1,6 @@
 [package]
 name = "wcpopup_node"
-version = "0.1.0"
+version = "0.1.1"
 license = "MIT"
 edition = "2021"
 exclude = ["index.node"]
@@ -24,7 +24,7 @@ version = "0.18.0"
 version = "0.18.0"
 
 [dependencies.wcpopup]
-version = "0.3.4"
+version = "0.5.1"
 #features = ["accelerator"]
 
 #[patch.crates-io]

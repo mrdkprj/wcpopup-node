@@ -17,7 +17,7 @@ use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use wcpopup::{
     config::{Config, Theme},
-    Menu, MenuBuilder,
+    Menu, MenuBuilder, MenuIcon,
 };
 mod types;
 use types::*;
@@ -131,11 +131,7 @@ fn build(cx: &mut FunctionContext, parent: f64, templates: Vec<Handle<JsValue>>,
 
 fn build_menu(builder: &mut MenuBuilder, items: &Vec<ElectronMenuItem>) {
     for item in items {
-        let disabled = if item.enabled {
-            None
-        } else {
-            Some(false)
-        };
+        let disabled = !item.enabled;
         match item.itype.as_str() {
             "normal" => {
                 if item.accelerator.is_empty() && item.icon.is_empty() {
@@ -143,7 +139,7 @@ fn build_menu(builder: &mut MenuBuilder, items: &Vec<ElectronMenuItem>) {
                 } else if item.icon.is_empty() {
                     builder.text_with_accelerator(&item.id, &item.label, disabled, &item.accelerator);
                 } else {
-                    builder.text_with_icon(&item.id, &item.label, disabled, Some(&item.accelerator), std::path::PathBuf::from(&item.icon));
+                    builder.text_with_accel_icon(&item.id, &item.label, disabled, &item.accelerator, MenuIcon::new(&item.icon));
                 }
             }
             "separator" => {
@@ -153,7 +149,7 @@ fn build_menu(builder: &mut MenuBuilder, items: &Vec<ElectronMenuItem>) {
                 let mut parent = if item.icon.is_empty() {
                     builder.submenu(&item.id, &item.label, disabled)
                 } else {
-                    builder.submenu_with_icon(&item.id, &item.label, disabled, std::path::PathBuf::from(&item.icon))
+                    builder.submenu_with_icon(&item.id, &item.label, disabled, MenuIcon::new(&item.icon))
                 };
                 build_menu(&mut parent, &item.submenu);
                 let submenu = parent.build().unwrap();
