@@ -410,6 +410,7 @@ pub fn from_config<'a, C: Context<'a>>(cx: &mut C, config: &Config) -> JsResult<
     configjs.set(cx, "font", font)?;
 
     let icon_obj = cx.empty_object();
+
     if let Some(icon) = &config.icon {
         let check_svg_obj = cx.empty_object();
         if let Some(check_svg) = &icon.check_svg {
@@ -419,8 +420,11 @@ pub fn from_config<'a, C: Context<'a>>(cx: &mut C, config: &Config) -> JsResult<
             check_svg_obj.set(cx, "width", a)?;
             let a = cx.number(check_svg.height);
             check_svg_obj.set(cx, "height", a)?;
+            icon_obj.set(cx, "checkSVG", check_svg_obj)?;
+        } else {
+            let undefined = cx.undefined();
+            icon_obj.set(cx, "checkSVG", undefined)?;
         }
-        icon_obj.set(cx, "checkSVG", check_svg_obj)?;
 
         let arrow_svg_obj = cx.empty_object();
         if let Some(arrow_svg) = &icon.arrow_svg {
@@ -430,12 +434,21 @@ pub fn from_config<'a, C: Context<'a>>(cx: &mut C, config: &Config) -> JsResult<
             arrow_svg_obj.set(cx, "width", a)?;
             let a = cx.number(arrow_svg.height);
             arrow_svg_obj.set(cx, "height", a)?;
+            icon_obj.set(cx, "arrowSVG", arrow_svg_obj)?;
+        } else {
+            let undefined = cx.undefined();
+            icon_obj.set(cx, "arrowSVG", undefined)?;
         }
-        icon_obj.set(cx, "checkSVG", arrow_svg_obj)?;
+
         let a = cx.boolean(icon.reserve_icon_size);
         icon_obj.set(cx, "reserveIconSize", a)?;
-        let a = cx.number(icon.horizontal_margin.unwrap_or(0));
-        icon_obj.set(cx, "horizontalMargin", a)?;
+        if let Some(margin) = icon.horizontal_margin {
+            let a = cx.number(margin);
+            icon_obj.set(cx, "horizontalMargin", a)?;
+        } else {
+            let undefined = cx.undefined();
+            icon_obj.set(cx, "horizontalMargin", undefined)?;
+        }
     }
 
     configjs.set(cx, "icon", icon_obj)?;

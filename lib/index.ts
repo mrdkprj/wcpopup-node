@@ -69,6 +69,20 @@ export type Config = {
     color: ThemeColor;
     corner: Corner;
     font: MenuFont;
+    icon?: IconSettings;
+};
+
+export type IconSettings = {
+    checkSVG?: MenuSVG;
+    arrowSVG?: MenuSVG;
+    reserveIconSize: boolean;
+    horizontalMargin?: number;
+};
+
+export type MenuSVG = {
+    path: string;
+    width: number;
+    height: number;
 };
 
 export type MenuType = "main" | "submenu";

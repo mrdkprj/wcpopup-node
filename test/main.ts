@@ -38,7 +38,7 @@ const createWindow = () => {
         }
     }
     let config = getDefaultConfig();
-    console.log(`node:${config.color.dark.accelerator}`);
+    console.log(config.icon);
     config.theme = "dark";
     config.size.itemVerticalPadding = 10;
     menu.buildFromTemplateWithConfig(hwnd, getTemp(), config);

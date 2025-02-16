@@ -77,7 +77,7 @@ var createWindow = function () {
         }
     }
     var config = (0, index_1.getDefaultConfig)();
-    console.log("node:".concat(config.color.dark.accelerator));
+    console.log(config.icon);
     config.theme = "dark";
     config.size.itemVerticalPadding = 10;
     menu.buildFromTemplateWithConfig(hwnd, getTemp(), config);
