@@ -56,6 +56,24 @@ pub fn to_string(cx: &mut FunctionContext, value: &Handle<JsObject>, key: &str) 
     value.get_opt::<JsString, _, _>(cx, key).unwrap().unwrap_or_else(|| JsString::new(cx, "")).value(cx)
 }
 
+fn to_hex_string(color: u32) -> String {
+    if has_alpha(color) {
+        format!("#{:08x}", color)
+    } else {
+        format!("#{:06x}", color & 0xFFFFFF)
+    }
+}
+
+fn has_alpha(value: u32) -> bool {
+    /* If the value is larger than 24 bits, it contains alpha */
+    value > 0xFFFFFF
+}
+
+fn to_hex_number(cx: &mut FunctionContext, value: &Handle<JsObject>, key: &str) -> u32 {
+    let hex_string = value.get_opt::<JsString, _, _>(cx, key).unwrap().unwrap_or_else(|| JsString::new(cx, "")).value(cx);
+    hex_string.strip_prefix('#').map(|hex| u32::from_str_radix(hex, 16).unwrap_or_default()).unwrap_or_default()
+}
+
 pub fn to_bool(cx: &mut FunctionContext, value: &Handle<JsObject>, key: &str, def: bool) -> bool {
     value.get_opt::<JsBoolean, _, _>(cx, key).unwrap().unwrap_or_else(|| JsBoolean::new(cx, def)).value(cx)
 }
@@ -64,6 +82,7 @@ pub fn to_i32(cx: &mut FunctionContext, value: &Handle<JsObject>, key: &str) -> 
     value.get_opt::<JsNumber, _, _>(cx, key).unwrap().unwrap_or_else(|| JsNumber::new(cx, 0)).value(cx) as i32
 }
 
+#[allow(dead_code)]
 pub fn to_u32(cx: &mut FunctionContext, value: &Handle<JsObject>, key: &str) -> u32 {
     value.get_opt::<JsNumber, _, _>(cx, key).unwrap().unwrap_or_else(|| JsNumber::new(cx, 0)).value(cx) as u32
 }
@@ -244,23 +263,23 @@ pub fn to_config(cx: &mut FunctionContext, value: Handle<JsObject>) -> Config {
     let light_color_scheme_obj = color_obj.get::<JsObject, _, _>(cx, "light").unwrap();
 
     let dark = ColorScheme {
-        color: to_u32(cx, &dark_color_scheme_obj, "color"),
-        accelerator: to_u32(cx, &dark_color_scheme_obj, "accelerator"),
-        border: to_u32(cx, &dark_color_scheme_obj, "border"),
-        separator: to_u32(cx, &dark_color_scheme_obj, "separator"),
-        disabled: to_u32(cx, &dark_color_scheme_obj, "disabled"),
-        background_color: to_u32(cx, &dark_color_scheme_obj, "backgroundColor"),
-        hover_background_color: to_u32(cx, &dark_color_scheme_obj, "hoverBackgroundColor"),
+        color: to_hex_number(cx, &dark_color_scheme_obj, "color"),
+        accelerator: to_hex_number(cx, &dark_color_scheme_obj, "accelerator"),
+        border: to_hex_number(cx, &dark_color_scheme_obj, "border"),
+        separator: to_hex_number(cx, &dark_color_scheme_obj, "separator"),
+        disabled: to_hex_number(cx, &dark_color_scheme_obj, "disabled"),
+        background_color: to_hex_number(cx, &dark_color_scheme_obj, "backgroundColor"),
+        hover_background_color: to_hex_number(cx, &dark_color_scheme_obj, "hoverBackgroundColor"),
     };
 
     let light = ColorScheme {
-        color: to_u32(cx, &light_color_scheme_obj, "color"),
-        accelerator: to_u32(cx, &light_color_scheme_obj, "accelerator"),
-        border: to_u32(cx, &light_color_scheme_obj, "border"),
-        separator: to_u32(cx, &light_color_scheme_obj, "separator"),
-        disabled: to_u32(cx, &light_color_scheme_obj, "disabled"),
-        background_color: to_u32(cx, &light_color_scheme_obj, "backgroundColor"),
-        hover_background_color: to_u32(cx, &light_color_scheme_obj, "hoverBackgroundColor"),
+        color: to_hex_number(cx, &light_color_scheme_obj, "color"),
+        accelerator: to_hex_number(cx, &light_color_scheme_obj, "accelerator"),
+        border: to_hex_number(cx, &light_color_scheme_obj, "border"),
+        separator: to_hex_number(cx, &light_color_scheme_obj, "separator"),
+        disabled: to_hex_number(cx, &light_color_scheme_obj, "disabled"),
+        background_color: to_hex_number(cx, &light_color_scheme_obj, "backgroundColor"),
+        hover_background_color: to_hex_number(cx, &light_color_scheme_obj, "hoverBackgroundColor"),
     };
 
     let color = ThemeColor {
@@ -335,41 +354,43 @@ pub fn from_config<'a, C: Context<'a>>(cx: &mut C, config: &Config) -> JsResult<
     size.set(cx, "itemHorizontalPadding", a)?;
     let a = cx.number(config.size.submenu_offset);
     size.set(cx, "submenuOffset", a)?;
+    let a = cx.number(config.size.separator_size);
+    size.set(cx, "separatorSize", a)?;
 
     configjs.set(cx, "size", size)?;
 
     let color = cx.empty_object();
     let dark = cx.empty_object();
-    let a = cx.number(config.color.dark.color);
+    let a = cx.string(to_hex_string(config.color.dark.color));
     dark.set(cx, "color", a)?;
-    let a = cx.number(config.color.dark.accelerator);
+    let a = cx.string(to_hex_string(config.color.dark.accelerator));
     dark.set(cx, "accelerator", a)?;
-    let a = cx.number(config.color.dark.border);
+    let a = cx.string(to_hex_string(config.color.dark.border));
     dark.set(cx, "border", a)?;
-    let a = cx.number(config.color.dark.separator);
+    let a = cx.string(to_hex_string(config.color.dark.separator));
     dark.set(cx, "separator", a)?;
-    let a = cx.number(config.color.dark.disabled);
+    let a = cx.string(to_hex_string(config.color.dark.disabled));
     dark.set(cx, "disabled", a)?;
-    let a = cx.number(config.color.dark.background_color);
+    let a = cx.string(to_hex_string(config.color.dark.background_color));
     dark.set(cx, "backgroundColor", a)?;
-    let a = cx.number(config.color.dark.hover_background_color);
+    let a = cx.string(to_hex_string(config.color.dark.hover_background_color));
     dark.set(cx, "hoverBackgroundColor", a)?;
     color.set(cx, "dark", dark)?;
 
     let light = cx.empty_object();
-    let a = cx.number(config.color.light.color);
+    let a = cx.string(to_hex_string(config.color.light.color));
     light.set(cx, "color", a)?;
-    let a = cx.number(config.color.light.accelerator);
+    let a = cx.string(to_hex_string(config.color.light.accelerator));
     light.set(cx, "accelerator", a)?;
-    let a = cx.number(config.color.light.border);
+    let a = cx.string(to_hex_string(config.color.light.border));
     light.set(cx, "border", a)?;
-    let a = cx.number(config.color.light.separator);
+    let a = cx.string(to_hex_string(config.color.light.separator));
     light.set(cx, "separator", a)?;
-    let a = cx.number(config.color.light.disabled);
+    let a = cx.string(to_hex_string(config.color.light.disabled));
     light.set(cx, "disabled", a)?;
-    let a = cx.number(config.color.light.background_color);
+    let a = cx.string(to_hex_string(config.color.light.background_color));
     light.set(cx, "backgroundColor", a)?;
-    let a = cx.number(config.color.light.hover_background_color);
+    let a = cx.string(to_hex_string(config.color.light.hover_background_color));
     light.set(cx, "hoverBackgroundColor", a)?;
     color.set(cx, "light", light)?;
 

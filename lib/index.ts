@@ -36,15 +36,17 @@ export type MenuSize = {
     itemHorizontalPadding: number;
     fontSize?: number;
     fontWeight?: number;
+    separatorSize: number;
 };
 
 export type ColorScheme = {
-    color: number;
-    border: number;
-    accelerator: number;
-    disabled: number;
-    backgroundColor: number;
-    hoverBackgroundColor: number;
+    color: string;
+    border: string;
+    accelerator: string;
+    disabled: string;
+    backgroundColor: string;
+    hoverBackgroundColor: string;
+    separator: string;
 };
 
 export type ThemeColor = {

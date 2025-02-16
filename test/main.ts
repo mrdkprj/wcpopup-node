@@ -38,32 +38,34 @@ const createWindow = () => {
         }
     }
     let config = getDefaultConfig();
-    console.log(config.icon);
+    console.log(config.color);
     config.theme = "dark";
     config.size.itemVerticalPadding = 10;
+    config.size.borderSize = 1;
+    config.color.dark.border = "#888888";
     menu.buildFromTemplateWithConfig(hwnd, getTemp(), config);
 
-    const win2 = new BrowserWindow({
-        title: "sub",
-        parent: win,
-        width: 800,
-        height: 601,
-        webPreferences: {
-            preload: path.join(__dirname, "preload.js"),
-        },
-    });
+    // const win2 = new BrowserWindow({
+    //     title: "sub",
+    //     parent: win,
+    //     width: 800,
+    //     height: 601,
+    //     webPreferences: {
+    //         preload: path.join(__dirname, "preload.js"),
+    //     },
+    // });
 
-    win2.loadFile("index2.html");
-    const menu2 = new Menu();
-    const hbuf2 = win2.getNativeWindowHandle();
+    // win2.loadFile("index2.html");
+    // const menu2 = new Menu();
+    // const hbuf2 = win2.getNativeWindowHandle();
 
-    if (os.endianness() == "LE") {
-        hwnd = hbuf2.readUInt32LE();
-    } else {
-        hwnd = hbuf2.readUInt32BE();
-    }
+    // if (os.endianness() == "LE") {
+    //     hwnd = hbuf2.readUInt32LE();
+    // } else {
+    //     hwnd = hbuf2.readUInt32BE();
+    // }
 
-    menu2.buildFromTemplateWithConfig(hwnd, getTemp(), config);
+    // menu2.buildFromTemplateWithConfig(hwnd, getTemp(), config);
 };
 
 const handleSetTitle = async (_event: any, pos: any) => {
