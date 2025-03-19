@@ -24,11 +24,7 @@ version = "0.18.0"
 version = "0.18.0"
 
 [dependencies.wcpopup]
-version = "0.5.1"
-#features = ["accelerator"]
-
-#[patch.crates-io]
-#wcpopup = { path = "../wcpopup" }
+version = "0.6.0"
 
 [profile.release]
 opt-level = "s"

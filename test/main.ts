@@ -41,7 +41,7 @@ const createWindow = () => {
     console.log(config.color);
     config.theme = "dark";
     config.size.itemVerticalPadding = 10;
-    config.size.borderSize = 1;
+    config.size.borderSize = 0;
     config.color.dark.border = "#888888";
     menu.buildFromTemplateWithConfig(hwnd, getTemp(), config);
 
