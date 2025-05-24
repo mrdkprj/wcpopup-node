@@ -24,7 +24,7 @@ version = "0.18.0"
 version = "0.18.0"
 
 [dependencies.wcpopup]
-version = "0.6.0"
+version = "0.7.0"
 
 [profile.release]
 opt-level = "s"
