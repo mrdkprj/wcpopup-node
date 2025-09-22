@@ -1191,9 +1191,9 @@ checksum = "af190c94f2773fdb3729c55b007a722abb5384da03bc0986df4c289bf5567e96"
 
 [[package]]
 name = "wcpopup"
-version = "0.7.0"
+version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ae02fe64354708f0b0f71ab5ab19801f3844ea4dd1d8fd6da432c5bb6b3a293"
+checksum = "f06f00492b6cfc73eeb82800f5fb0ee37f1988ae0abc24a63bda6ab9f1dfab0c"
 dependencies = [
  "async-std",
  "gtk",
